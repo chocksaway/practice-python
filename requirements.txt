@@ -1,5 +1,4 @@
 openai==0.28
-python-dotenv>=0.21.0
-python-dotenv[cli]
+python-dotenv[cli]>=0.21.0
 pytest>=8.4.2
 anyio>=4.0.0
