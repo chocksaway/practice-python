@@ -18,79 +18,25 @@ def build_context_message(chunks: List[Dict], max_chars: int = 8000) -> str:
         total += len(part)
     return "\n---\n".join(parts)
 
+# Accept several shapes: string, {"content": str}, OpenAI-like {"choices":[{"message":{"content": str}}]}
 def _normalize_llm_output(resp: Any) -> str:
-    """
-    Accept several shapes and return the text content:
-    - plain string
-    - dict-like: {"content": str}
-    - OpenAI-like dict: {"choices": [{"message": {"content": str}}]}
-    - OpenAI objects: objects with .to_dict() or .choices attributes
-    """
     if isinstance(resp, str):
         return resp
-
-    # If the object can be converted to a dict (OpenAI objects often can), use that
-    try:
-        to_dict = getattr(resp, "to_dict", None)
-        if callable(to_dict):
-            d = resp.to_dict()
-        else:
-            d = None
-    except Exception:
-        d = None
-
-    if isinstance(d, dict):
-        resp = d
-
     if isinstance(resp, dict):
         if "content" in resp:
             return resp["content"]
-        if "choices" in resp and resp["choices"]:
+        if "choices" in resp:
+            # OpenAI ChatCompletion shape
             try:
                 return resp["choices"][0]["message"]["content"]
             except Exception:
-                # try alternative keys
-                try:
-                    return resp["choices"][0].get("text")
-                except Exception:
-                    pass
-
-    # Fallback: object with .choices attribute
-    choices = getattr(resp, "choices", None)
-    if choices:
-        try:
-            first = choices[0]
-            # if first is dict-like
-            if isinstance(first, dict):
-                msg = first.get("message") or {}
-                if isinstance(msg, dict) and "content" in msg:
-                    return msg["content"]
-                if "text" in first:
-                    return first.get("text")
-            # if first is object-like
-            msg = getattr(first, "message", None)
-            if msg is not None:
-                if isinstance(msg, dict) and "content" in msg:
-                    return msg["content"]
-                content = getattr(msg, "content", None)
-                if content:
-                    return content
-                # msg might support .get
-                try:
-                    g = msg.get("content")
-                    if g:
-                        return g
-                except Exception:
-                    pass
-            # last resort: try first.text
-            text_attr = getattr(first, "text", None)
-            if text_attr:
-                return text_attr
-        except Exception:
-            pass
-
+                pass
     raise ValueError("Unrecognized LLM response shape")
 
+"""
+Build prompt from chunks + question, call llm(messages) and return {'answer', 'sources'}.
+If llm is None, an attempt to call OpenAI would be made (not used in tests).
+"""
 def generate_answer(
     question: str,
     chunks: List[Dict],
@@ -99,10 +45,6 @@ def generate_answer(
     temperature: float = 0.0,
     max_tokens: int = 400,
 ) -> Dict:
-    """
-    Build prompt from chunks + question, call llm(messages) and return {'answer', 'sources'}.
-    If llm is None, an attempt to call OpenAI would be made (not used in tests).
-    """
     context_block = build_context_message(chunks, max_chars=max_chars)
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT},

@@ -3,13 +3,31 @@ import math
 from collections import Counter
 from pathlib import Path
 
+
+"""
+Split by word boundaries, lowercase, and remove empty tokens.
+["hello", "world", "2026"]. 
+"""
 def tokenize(text):
     return [t for t in re.findall(r"\w+", text.lower()) if t]
 
+
+"""
+Count the frequency of each token in the list. Returns a Counter object mapping tokens to their counts.
+"""
 def vectorize(tokens):
     # simple count-vector "embedding"
     return Counter(tokens)
 
+
+
+
+"""
+Find words both texts share.
+Multiply their counts and add those products (dot product).
+Divide by the product of each text's length (Euclidean norm).
+Result near 1 = very similar (same words/ratios). Near 0 = little or no overlap.
+"""
 def cosine_sim(a, b):
     common = set(a.keys()) & set(b.keys())
     num = sum(a[k] * b[k] for k in common)
@@ -19,6 +37,9 @@ def cosine_sim(a, b):
         return 0.0
     return num / (denom_a * denom_b)
 
+"""
+Splits text into paragraphs using re.split(r"\n\s\n") and strips each paragraph.
+"""
 def chunk_text(text, max_words=200):
     paras = [p.strip() for p in re.split(r"\n\s*\n", text) if p.strip()]
     chunks = []
@@ -31,6 +52,9 @@ def chunk_text(text, max_words=200):
                 chunks.append(" ".join(words[i : i + max_words]))
     return chunks
 
+"""
+Reads markdown files and returns a list of text chunks plus the list of files.
+"""
 def load_chunks(kb_dir: Path):
     md_files = sorted(kb_dir.glob("*.md"))
     chunks = []
