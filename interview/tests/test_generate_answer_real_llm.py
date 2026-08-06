@@ -59,3 +59,40 @@ def test_generate_answer_with_real_openai():
     assert out and isinstance(out.get("answer"), str)
     assert ("£6" in out["answer"] or "6 per day" in out["answer"] or "6" in out["answer"])
     assert "roaming-policy.md::0" in out.get("sources", []), f"Sources returned: {out.get('sources')}"
+
+
+@pytest.mark.real_llm
+def test_generate_answer_with_real_openai_unknown():
+    if os.getenv("RUN_REAL_LLM_TESTS", "0") not in ("1", "true", "True"):
+        pytest.skip("Set RUN_REAL_LLM_TESTS=1 to run real-LLM tests")
+    if not os.getenv("OPENAI_API_KEY"):
+        pytest.skip("OPENAI_API_KEY not set")
+
+    repo_root = Path(__file__).resolve().parents[2]
+    kb_dir = repo_root / "interview" / "knowledge-base"
+    if not kb_dir.exists():
+        pytest.skip("knowledge-base directory not found: interview/knowledge-base")
+
+    chunks, md_files = load_chunks(kb_dir)
+    if not chunks:
+        pytest.skip("No markdown files / chunks found in knowledge-base")
+
+    question = "What is Vodafone's current share price?"
+    model = os.getenv("OPENAI_MODEL", "gpt-3.5-turbo")
+
+    def llm_wrapper(messages):
+        start = time.time()
+        resp = openai.ChatCompletion.create(
+            model=model,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=50,
+        )
+        return resp
+
+    out = generate_answer(question, chunks, llm=llm_wrapper, max_chars=4000, max_tokens=50)
+    answer = out.get("answer", "").strip()
+    logger.info("Unknown question answer: %s", answer)
+    answer_lower = answer.lower()
+    assert any(p in answer_lower for p in ("i don't know", "i do not know")), f'Expected "I don\'t know" but got: {answer}'
+    assert out.get("sources") == [], f"Expected no sources for unknown question, got: {out.get('sources')}"
