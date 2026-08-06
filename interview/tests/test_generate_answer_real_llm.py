@@ -11,7 +11,7 @@ from interview.ingest import load_chunks, tokenize, vectorize
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-@pytest.mark.real_llm
+
 def test_generate_answer_with_real_openai():
     if os.getenv("RUN_REAL_LLM_TESTS", "0") not in ("1", "true", "True"):
         pytest.skip("Set RUN_REAL_LLM_TESTS=1 to run real-LLM tests")
@@ -60,8 +60,6 @@ def test_generate_answer_with_real_openai():
     assert ("£6" in out["answer"] or "6 per day" in out["answer"] or "6" in out["answer"])
     assert "roaming-policy.md::0" in out.get("sources", []), f"Sources returned: {out.get('sources')}"
 
-
-@pytest.mark.real_llm
 def test_generate_answer_with_real_openai_unknown():
     if os.getenv("RUN_REAL_LLM_TESTS", "0") not in ("1", "true", "True"):
         pytest.skip("Set RUN_REAL_LLM_TESTS=1 to run real-LLM tests")

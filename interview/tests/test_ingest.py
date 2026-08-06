@@ -9,8 +9,6 @@ from interview.ingest import load_chunks, vectorize, cosine_sim, tokenize
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-
-@pytest.mark.integration
 def test_ingest_and_retrieve():
     repo_root = Path(__file__).resolve().parents[2]
     kb_dir = repo_root / "interview" / "knowledge-base"
