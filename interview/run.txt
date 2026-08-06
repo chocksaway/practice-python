@@ -4,6 +4,8 @@ source .venv/bin/activate
 
 pip install -r requirements.txt
 
+copy .env
+
 dotenv run -- sh -c "PYTHONPATH=. pytest interview/tests -o log_cli=true -o log_cli_level=INFO -q"
 
 dotenv run -- python main.py "How much does the Roam Further World pass cost per day?"
