@@ -2,8 +2,7 @@
 """Simple CLI to ask a question against interview/knowledge-base using OpenAI.
 
 Usage:
-  python main.py "What is X?"
-  python main.py "Ask me"
+  dotenv run -- python main.py "How much does the Roam Further World pass cost per day?"
 
 It follows the flow from tests/test_generate_answer_real_llm.py: load chunks, call OpenAI, print answer and sources.
 """
