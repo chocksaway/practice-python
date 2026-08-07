@@ -34,7 +34,7 @@ def _normalize_llm_output(resp: Any) -> str:
     raise ValueError("Unrecognized LLM response shape")
 
 """
-Build prompt from chunks + question, call llm(messages) and return {'answer', 'sources'}.
+Build prompt from chunks + question, call llm(messages) - or test stub and return {'answer', 'sources'}.
 If llm is None, an attempt to call OpenAI would be made (not used in tests).
 """
 def generate_answer(
